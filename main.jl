@@ -8,17 +8,16 @@ using DataFrames, CSV
 begin
 
 """
-    filter_decreasing(p, eps)
+    filter_both_sorted(p, eps)
 
-Filters two vectors, `p` and `eps`, to ensure that the `eps` vector
-is monotonically increasing. It discards elements from both vectors
-where a value in `eps` is smaller than the maximum `eps` value seen so far.
+Filters two vectors, `p` and `eps`, keeping only the data points (p[i], eps[i])
+that maintain a monotonically increasing order in BOTH vectors simultaneously.
 
 Returns a tuple containing the two filtered vectors: `(p_filtered, eps_filtered)`.
 """
-function filter_decreasing(p::Vector, eps::Vector)
+function filter_both_sorted(p::Vector, eps::Vector)
     # Return empty vectors if input is empty or lengths mismatch
-    if isempty(eps) || length(p) != length(eps)
+    if isempty(p) || length(p) != length(eps)
         return similar(p, 0), similar(eps, 0)
     end
 
@@ -26,19 +25,22 @@ function filter_decreasing(p::Vector, eps::Vector)
     p_filtered = [p[1]]
     eps_filtered = [eps[1]]
 
-    # Keep track of the last valid maximum value from eps
+    # Keep track of the last maximum value seen in BOTH vectors
+    last_max_p = p[1]
     last_max_eps = eps[1]
 
     # Iterate through the vectors starting from the second element
-    for i in 2:length(eps)
-        # Only keep the point if the eps value is not decreasing
-        if eps[i] >= last_max_eps
+    for i in 2:length(p)
+        # The condition now checks both vectors
+        if p[i] >= last_max_p && eps[i] >= last_max_eps
             push!(p_filtered, p[i])
             push!(eps_filtered, eps[i])
-            # Update the last maximum value
+
+            # Update both "high-water marks"
+            last_max_p = p[i]
             last_max_eps = eps[i]
         end
-        # If eps[i] < last_max_eps, the point is discarded
+        # If the condition is false, the point is discarded
     end
 
     return p_filtered, eps_filtered
@@ -47,12 +49,10 @@ end
 eosdf = CSV.read("testeos2.csv", DataFrame)
 p = eosdf[:,1]
 eps = eosdf[:,2]
-p, eps = filter_decreasing(p, eps)
-eps, p = filter_decreasing(eps, p)
+p, eps = filter_both_sorted(p, eps)
 @assert length(eps) == length(p)
 @assert issorted(eps) && issorted(p)
 n = length(eps)
-out = zeros(2)
 
 function getMR(eps, p, n, epsc)
     out = zeros(2)
