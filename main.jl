@@ -6,11 +6,51 @@ using DataFrames, CSV
 #TODO: make include directory for the exported C++ code
 
 begin
+
+"""
+    filter_decreasing(p, eps)
+
+Filters two vectors, `p` and `eps`, to ensure that the `eps` vector
+is monotonically increasing. It discards elements from both vectors
+where a value in `eps` is smaller than the maximum `eps` value seen so far.
+
+Returns a tuple containing the two filtered vectors: `(p_filtered, eps_filtered)`.
+"""
+function filter_decreasing(p::Vector, eps::Vector)
+    # Return empty vectors if input is empty or lengths mismatch
+    if isempty(eps) || length(p) != length(eps)
+        return similar(p, 0), similar(eps, 0)
+    end
+
+    # Initialize the filtered vectors with the first element
+    p_filtered = [p[1]]
+    eps_filtered = [eps[1]]
+
+    # Keep track of the last valid maximum value from eps
+    last_max_eps = eps[1]
+
+    # Iterate through the vectors starting from the second element
+    for i in 2:length(eps)
+        # Only keep the point if the eps value is not decreasing
+        if eps[i] >= last_max_eps
+            push!(p_filtered, p[i])
+            push!(eps_filtered, eps[i])
+            # Update the last maximum value
+            last_max_eps = eps[i]
+        end
+        # If eps[i] < last_max_eps, the point is discarded
+    end
+
+    return p_filtered, eps_filtered
+end
     
-eosdf = CSV.read("testeos.csv", DataFrame)
-eps = eosdf[:,1]
-p = eosdf[:,2]
+eosdf = CSV.read("testeos2.csv", DataFrame)
+p = eosdf[:,1]
+eps = eosdf[:,2]
+p, eps = filter_decreasing(p, eps)
+eps, p = filter_decreasing(eps, p)
 @assert length(eps) == length(p)
+@assert issorted(eps) && issorted(p)
 n = length(eps)
 out = zeros(2)
 
@@ -22,7 +62,7 @@ end
 
 end
 
-epsc = exp.(range(log(150.0), log(eps[end]-100.0), length=100))
+epsc = exp.(range(log(10.0), log(eps[end]-100.0), length=100))
 M = zeros(length(epsc))
 R = zeros(length(epsc))
 for i in 1:length(epsc)
@@ -32,4 +72,4 @@ for i in 1:length(epsc)
 end
 
 df = DataFrame(epsc=epsc, M=M, R=R)
-CSV.write("MR.csv", df, writeheader=false)
+CSV.write("MRcpp2.csv", df, writeheader=false)
