@@ -10,4 +10,4 @@ struct Initial_conditions_TOV {
   };
 
 int TOV_equations(double h, const double y[], double f[], void *paraM_sol);
-Initial_conditions_TOV IC_TOV(double epsilon_c, EOSinterpolation &EoS);
+Initial_conditions_TOV IC_TOV(double epsilon_c, EOSinterpolation &EoS, double R_start);

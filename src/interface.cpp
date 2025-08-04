@@ -9,7 +9,7 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_odeiv2.h>
 
-extern "C" void qlimr_getMR(double *eos_p, double *eos_eps, int length, double eps_c, double *out) {
+extern "C" void qlimr_getMR(double *eos_p, double *eos_eps, int length, double eps_c, double R_start, double *out) {
 
     // std::cout << "p[0] = " << eos_p[0] << ", p[end] = " << eos_p[length - 1] << "\n";
     // std::cout << "eps[0] = " << eos_eps[0] << ", eps[end] = " << eos_eps[length - 1] << "\n";
@@ -39,7 +39,7 @@ extern "C" void qlimr_getMR(double *eos_p, double *eos_eps, int length, double e
     // std::cout << "eps_c = " << eps_c << "\n";
 
     // Obtain initial conditions
-    Initial_conditions_TOV IC_tov = IC_TOV(eps_c, eos.EoS);
+    Initial_conditions_TOV IC_tov = IC_TOV(eps_c, eos.EoS, R_start);
 
     // std::cout << "Initial conditions obtained: R_start = " << IC_tov.R_start
             //   << ", M_start = " << IC_tov.M_start

@@ -32,7 +32,7 @@ int TOV_equations(double h, const double y[], double f[], void *paraM_sol)
 }
 
 // Initial conditions for TOVh system 
-Initial_conditions_TOV IC_TOV(double epsilon_c, EOSinterpolation &EoS)
+Initial_conditions_TOV IC_TOV(double epsilon_c, EOSinterpolation &EoS, double R_start)
 {
 
   // Values at exactly the center
@@ -44,7 +44,7 @@ Initial_conditions_TOV IC_TOV(double epsilon_c, EOSinterpolation &EoS)
 
   // ################## Asymptotic solutions ###################
 
-  double R = 0.000270887; //NOTE: hardcoded
+  double R = R_start; //NOTE: hardcoded
 
   double M = (4.0 / 3.0) * M_PI * epsilon_c * pow(R, 3);
 
