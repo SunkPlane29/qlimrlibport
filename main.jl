@@ -54,22 +54,24 @@ p, eps = filter_both_sorted(p, eps)
 @assert issorted(eps) && issorted(p)
 n = length(eps)
 
-function getMR(eps, p, n, epsc)
+function getMR(eps, p, n, epsc, R_initial)
     out = zeros(2)
-    ccall((:qlimr_getMR, "./libqlimr.so"), Cvoid, (Ptr{Cdouble}, Ptr{Cdouble}, Cint, Cdouble, Ptr{Cdouble}), p, eps, n, epsc, out)
+    ccall((:qlimr_getMR, "./libqlimr.so"), Cvoid, (Ptr{Cdouble}, Ptr{Cdouble}, Cint, Cdouble, Cdouble, Ptr{Cdouble}), p, eps, n, epsc, R_initial, out)
     return copy(out)
 end
 
 end
 
-epsc = exp.(range(log(10.0), log(eps[end]-100.0), length=100))
-M = zeros(length(epsc))
-R = zeros(length(epsc))
-for i in 1:length(epsc)
-    out = getMR(eps, p, n, epsc[i])
-    M[i] = out[1]
-    R[i] = out[2] 
-end
+getMR(eps, p, n, 250.0, 1e-8)
 
-df = DataFrame(epsc=epsc, M=M, R=R)
-CSV.write("MRcpp2.csv", df, writeheader=false)
+# epsc = exp.(range(log(10.0), log(eps[end]-100.0), length=100))
+# M = zeros(length(epsc))
+# R = zeros(length(epsc))
+# for i in 1:length(epsc)
+#     out = getMR(eps, p, n, epsc[i])
+#     M[i] = out[1]
+#     R[i] = out[2] 
+# end
+
+# df = DataFrame(epsc=epsc, M=M, R=R)
+# CSV.write("MRcpp2.csv", df, writeheader=false)

@@ -102,8 +102,14 @@ extern "C" void qlimr_getMR(double *eos_p, double *eos_eps, int length, double e
         e_sol.push_back(eos.EoS.e_of_h.yofx(h));
     }
 
+    
+    // Print step before last, h, p and e
+    std::cout << "Before last: h = " << h_sol[h_sol.size() - 2] 
+                << ", p = " << p_sol[p_sol.size() - 2] 
+                << ", e = " << e_sol[e_sol.size() - 2] << "\n"; 
+
     // // Check that integration indeed goes up to h = 0 where p = 0. 
-    // std::cout << "h = " << h  << " " << "p = " << p_sol.back() << " " << "e = " << e_sol.back()  << "\n"; 
+    std::cout << "Last: h = " << h  << " " << "p = " << p_sol.back() << " " << "e = " << e_sol.back()  << "\n"; 
 
     // Free GSL variables of the integrator
     gsl_odeiv2_evolve_free(e);
