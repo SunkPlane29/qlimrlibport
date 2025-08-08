@@ -62,16 +62,16 @@ end
 
 end
 
-getMR(eps, p, n, 250.0, 1e-8)
+# getMR(eps, p, n, 300.0, 0.0004)
 
-# epsc = exp.(range(log(10.0), log(eps[end]-100.0), length=100))
-# M = zeros(length(epsc))
-# R = zeros(length(epsc))
-# for i in 1:length(epsc)
-#     out = getMR(eps, p, n, epsc[i])
-#     M[i] = out[1]
-#     R[i] = out[2] 
-# end
+epsc = exp.(range(log(10.0), log(eps[end]-100.0), length=100))
+M = zeros(length(epsc))
+R = zeros(length(epsc))
+@time for i in 1:length(epsc)
+    out = getMR(eps, p, n, epsc[i], 0.0004)
+    M[i] = out[1]
+    R[i] = out[2] 
+end
 
-# df = DataFrame(epsc=epsc, M=M, R=R)
-# CSV.write("MRcpp2.csv", df, writeheader=false)
+df = DataFrame(epsc=epsc, M=M, R=R)
+CSV.write("MRcpp2.csv", df, writeheader=false)

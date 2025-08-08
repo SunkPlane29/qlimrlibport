@@ -4,10 +4,42 @@
 
 #include <iostream>
 #include <cmath>
+#include <fstream>
+#include <string>
 
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_odeiv2.h>
+
+void output_quantities(const std::vector<double> &h_sol, 
+                        const std::vector<double> &R_sol, 
+                        const std::vector<double> &M_sol, 
+                        const std::vector<double> &p_sol, 
+                        const std::vector<double> &e_sol) {
+
+    // --- Check for consistent sizes ---
+    size_t num_rows = h_sol.size();
+    if (R_sol.size() != num_rows || M_sol.size() != num_rows ||
+        p_sol.size() != num_rows || e_sol.size() != num_rows) {
+        throw std::runtime_error("Error: All solution vectors must have the same size.");
+    }
+
+    // Output quantities to a file or console
+    // This function can be customized as needed
+    std::ofstream file("tov_sol.csv");
+    if (!file.is_open()) {
+        std::cerr << "Error opening file for output." << std::endl;
+        return;
+    }
+
+    for (size_t i = 0; i < num_rows; ++i) {
+        file << h_sol[i] << ", "
+             << R_sol[i] << ", "
+             << M_sol[i] << ", "
+             << p_sol[i] << ", "
+             << e_sol[i] << "\n";
+    }
+}
 
 extern "C" void qlimr_getMR(double *eos_p, double *eos_eps, int length, double eps_c, double R_start, double *out) {
 
@@ -59,7 +91,7 @@ extern "C" void qlimr_getMR(double *eos_p, double *eos_eps, int length, double e
     double h_stop = 0.0;
 
     // Solution vectors to store h, R, M, p, e and ν at each step in h
-    std::vector<double> h_sol, R_sol, M_sol, p_sol, e_sol, nu_sol;
+    std::vector<double> h_sol, R_sol, M_sol, p_sol, e_sol;
 
     // Add initial conditions at h_start
     h_sol.push_back(h);
@@ -116,9 +148,16 @@ extern "C" void qlimr_getMR(double *eos_p, double *eos_eps, int length, double e
     gsl_odeiv2_control_free(c);
     gsl_odeiv2_step_free(s);
 
+    std::vector<double> R_sol_dim;
+    for (const auto &R : R_sol) {
+        R_sol_dim.push_back(Input_QLIMR::dimensionalize(R, "km"));
+    }
+
+    output_quantities(h_sol, R_sol_dim, M_sol, p_sol, e_sol);
+
     // Storing total mass M = m(h=0) and radius R = r(h=0) 
     out[0] = M_sol.back();
-    out[1] = Input_QLIMR::dimensionalize(R_sol.back(), "km");
+    out[1] = R_sol_dim.back();
 
     std::cout << "Final mass M = " << out[0] << ", Final radius R = " << out[1] << "\n";
 }
