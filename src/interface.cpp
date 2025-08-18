@@ -6,6 +6,9 @@
 #include <cmath>
 #include <fstream>
 #include <string>
+#include <tuple>
+#include <future>
+#include <chrono>
 
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_matrix.h>
@@ -41,22 +44,9 @@ void output_quantities(const std::vector<double> &h_sol,
     }
 }
 
-extern "C" void qlimr_getMR(double *eos_p, double *eos_eps, int length, double eps_c, double R_start, double *out) {
-
-    // std::cout << "p[0] = " << eos_p[0] << ", p[end] = " << eos_p[length - 1] << "\n";
-    // std::cout << "eps[0] = " << eos_eps[0] << ", eps[end] = " << eos_eps[length - 1] << "\n";
-    // Number of dependent variables of the ODE system to be solved
+void _qlimr_getMR(EOS &eos, double eps_c, double *out) {
     const int dim = 2;
-
-    // std::cout << "getting eos" << "\n";
-    EOS eos((gsl_interp_type *)gsl_interp_steffen, eos_p, eos_eps, length);
-
-    // print first and last of h vec
-    // std::cout << "h_vec[0] = " << eos.EoS.h_vec.front() << ", h_vec.back() = " << eos.EoS.h_vec.back() << "\n";
-    // std::cout << "e_vec[0] = " << eos.EoS.e_vec.front() << ", e_vec.back() = " << eos.EoS.e_vec.back() << "\n";
-    // std::cout << "p_vec[0] = " << eos.EoS.p_vec.front() << ", p_vec.back() = " << eos.EoS.p_vec.back() << "\n";
-
-    // std::cout << "eos obtained" << "\n";
+    const double R_start = 0.0004; // km
 
     // Defining GSL variables: system, step, control and evolve 
     gsl_odeiv2_system sys = {TOV_equations, NULL, dim, &eos.EoS};
@@ -64,11 +54,8 @@ extern "C" void qlimr_getMR(double *eos_p, double *eos_eps, int length, double e
     gsl_odeiv2_control *c = gsl_odeiv2_control_y_new(1e-10, 1e-10);
     gsl_odeiv2_evolve *e = gsl_odeiv2_evolve_alloc(dim);
 
-    // std::cout << "gsl variables allocated" << "\n";
-
-    std::cout << "eps_c = " << eps_c << "\n"; 
+    // std::cout << "eps_c = " << eps_c << "\n"; 
     eps_c = EOS::adimensionalize(eps_c, "MeV/fm^3");
-    // std::cout << "eps_c = " << eps_c << "\n";
 
     // Obtain initial conditions
     Initial_conditions_TOV IC_tov = IC_TOV(eps_c, eos.EoS, R_start);
@@ -160,4 +147,42 @@ extern "C" void qlimr_getMR(double *eos_p, double *eos_eps, int length, double e
     out[1] = R_sol_dim.back();
 
     // std::cout << "Final mass M = " << out[0] << ", Final radius R = " << out[1] << "\n";
+}
+
+std::tuple<double,double> _qlimr_getMR_func(EOS &eos, double eps_c) {
+    double out[2];
+    _qlimr_getMR(eos, eps_c, out);
+    return std::make_tuple(out[0], out[1]);
+}
+
+extern "C" void qlimr_getMR(double *eos_p, double *eos_eps, int length, double eps_c, double *out) {
+    EOS eos((gsl_interp_type *)gsl_interp_steffen, eos_p, eos_eps, length);
+
+    _qlimr_getMR(eos, eps_c, out);    
+}
+
+extern "C" void qlimr_getMRdiagram(double *eos_p, double *eos_eps, int length, double epsc_start, double epsc_end, int nstars, double *out_epsc, double *out_M, double *out_R) {
+    EOS eos((gsl_interp_type *)gsl_interp_steffen, eos_p, eos_eps, length);
+
+    // Linear spacing the the logarithm work really well for the MR diagram
+    double delta_epsc = (log(epsc_end) - log(epsc_start)) / (nstars - 1);
+    std::vector<double> epsc_values(nstars);
+    for (int i = 0; i < nstars; i++) {
+        epsc_values[i] = exp(log(epsc_start) + i * delta_epsc);
+    }
+
+    std::vector<std::future<std::tuple<double, double>>> futures;
+
+    std::cout << "Running MR diagram calculations for " << nstars << " stars...\n";
+
+    for (int i = 0; i < nstars; i++) {
+        futures.push_back(std::async(std::launch::async, _qlimr_getMR_func, std::ref(eos), epsc_values[i]));
+    }
+
+    for (int i = 0; i < nstars; i++) {
+        auto result = futures[i].get();
+        out_epsc[i] = epsc_values[i];
+        out_M[i] = std::get<0>(result);
+        out_R[i] = std::get<1>(result);
+    }
 }

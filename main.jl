@@ -64,14 +64,26 @@ end
 
 # getMR(eps, p, n, 300.0, 0.0004)
 
-epsc = exp.(range(log(10.0), log(eps[end]-100.0), length=100))
-M = zeros(length(epsc))
-R = zeros(length(epsc))
-@time for i in 1:length(epsc)
-    out = getMR(eps, p, n, epsc[i], 0.0004)
-    M[i] = out[1]
-    R[i] = out[2] 
-end
+# epsc = exp.(range(log(10.0), log(eps[end]-100.0), length=100))
+# M = zeros(length(epsc))
+# R = zeros(length(epsc))
+# @time for i in 1:length(epsc)
+#     out = getMR(eps, p, n, epsc[i], 0.0004)
+#     M[i] = out[1]
+#     R[i] = out[2] 
+# end
 
-df = DataFrame(epsc=epsc, M=M, R=R)
+# df = DataFrame(epsc=epsc, M=M, R=R)
+# CSV.write("MRcpp2.csv", df, writeheader=false)
+
+epsc_start = 10.0
+epsc_end = eps[end] - 100.0
+nstars = 100
+epsc_result = zeros(nstars)
+M_result = zeros(nstars)
+R_result = zeros(nstars)
+
+@time ccall((:qlimr_getMRdiagram, "./libqlimr.so"), Cvoid, (Ptr{Cdouble}, Ptr{Cdouble}, Cint, Cdouble, Cdouble, Cint, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}), 
+    p, eps, n, epsc_start, epsc_end, nstars, epsc_result, M_result, R_result)
+df = DataFrame(epsc=epsc_result, M=M_result, R=R_result)
 CSV.write("MRcpp2.csv", df, writeheader=false)
