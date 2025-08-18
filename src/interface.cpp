@@ -136,12 +136,12 @@ extern "C" void qlimr_getMR(double *eos_p, double *eos_eps, int length, double e
 
     
     // Print step before last, h, p and e
-    std::cout << "Before last: h = " << h_sol[h_sol.size() - 2] 
-                << ", p = " << p_sol[p_sol.size() - 2] 
-                << ", e = " << e_sol[e_sol.size() - 2] << "\n"; 
+    // std::cout << "Before last: h = " << h_sol[h_sol.size() - 2] 
+    //             << ", p = " << p_sol[p_sol.size() - 2] 
+    //             << ", e = " << e_sol[e_sol.size() - 2] << "\n"; 
 
     // // Check that integration indeed goes up to h = 0 where p = 0. 
-    std::cout << "Last: h = " << h  << " " << "p = " << p_sol.back() << " " << "e = " << e_sol.back()  << "\n"; 
+    // std::cout << "Last: h = " << h  << " " << "p = " << p_sol.back() << " " << "e = " << e_sol.back()  << "\n"; 
 
     // Free GSL variables of the integrator
     gsl_odeiv2_evolve_free(e);
@@ -159,5 +159,5 @@ extern "C" void qlimr_getMR(double *eos_p, double *eos_eps, int length, double e
     out[0] = M_sol.back();
     out[1] = R_sol_dim.back();
 
-    std::cout << "Final mass M = " << out[0] << ", Final radius R = " << out[1] << "\n";
+    // std::cout << "Final mass M = " << out[0] << ", Final radius R = " << out[1] << "\n";
 }
