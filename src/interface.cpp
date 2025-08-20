@@ -140,7 +140,7 @@ void _qlimr_getMR(EOS &eos, double eps_c, double *out) {
         R_sol_dim.push_back(Input_QLIMR::dimensionalize(R, "km"));
     }
 
-    output_quantities(h_sol, R_sol_dim, M_sol, p_sol, e_sol);
+    // output_quantities(h_sol, R_sol_dim, M_sol, p_sol, e_sol);
 
     // Storing total mass M = m(h=0) and radius R = r(h=0) 
     out[0] = M_sol.back();
@@ -173,7 +173,7 @@ extern "C" void qlimr_getMRdiagram(double *eos_p, double *eos_eps, int length, d
 
     std::vector<std::future<std::tuple<double, double>>> futures;
 
-    std::cout << "Running MR diagram calculations for " << nstars << " stars...\n";
+    // std::cout << "Running MR diagram calculations for " << nstars << " stars...\n";
 
     for (int i = 0; i < nstars; i++) {
         futures.push_back(std::async(std::launch::async, _qlimr_getMR_func, std::ref(eos), epsc_values[i]));
