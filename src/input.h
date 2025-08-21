@@ -72,6 +72,8 @@ public:
   // Parametric constructor: 
   EOS(gsl_interp_type *type, double *eos_p, double *eos_eps, int length);
 
+  ~EOS();
+
   // Method function to compute EoS in terms of pseudo-enthalpy (h)
   void calculate_eos_of_h(std::vector<double> *epsilon, gsl_interp_type *type);
 };

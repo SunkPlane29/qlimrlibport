@@ -37,3 +37,7 @@ build:
 clean:
 	@echo "Cleaning build artifacts..."
 	rm -rf $(OBJDIR) *.o *.so $(TARGET) $(DEPFILES)
+
+.PHONY: build-main
+build-main:
+	$(CXX) -g main.cpp -L. -l:libqlimr.so -I./src -o main.out

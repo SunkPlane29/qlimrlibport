@@ -202,3 +202,11 @@ void EOS::calculate_eos_of_h(std::vector<double> *epsilon,
   // std::cout << "EoS interpolation completed.\n";
 }
 //-----------------------------------------------------------------------------
+
+EOS::~EOS() {
+  EoS.e_of_h.free();
+  EoS.p_of_h.free();
+  EoS.h_of_e.free();
+  EoS.h_of_p.free();
+  EoS.p_of_e.free();
+}
