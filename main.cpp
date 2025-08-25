@@ -101,8 +101,8 @@ int main() {
     double R_sol[n_stars];
 
     for (int i = 0; i < 100; i++) {
-        // qlimr_getMR(p.data(), e.data(), n, eps_c, out);
-        qlimr_getMRdiagram(p.data(), e.data(), n, eps_start, eps_end, n_stars, epsc_sol, M_sol, R_sol);
+        qlimr_getMR(p.data(), e.data(), n, eps_c, out);
+        // qlimr_getMRdiagram(p.data(), e.data(), n, eps_start, eps_end, n_stars, epsc_sol, M_sol, R_sol);
     }
 
     return 0;

@@ -1,3 +1,4 @@
 libqlimr.so
 build/
 .vscode/
+*.out
