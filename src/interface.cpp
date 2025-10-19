@@ -46,7 +46,7 @@ void output_quantities(const std::vector<double> &h_sol,
 
 void _qlimr_getMR(EOS &eos, double eps_c, double *out) {
     const int dim = 2;
-    const double R_start = 0.0004; // km
+    const double R_start = Input_QLIMR::adimensionalize(0.0004, "km"); // km
 
     // Defining GSL variables: system, step, control and evolve 
     gsl_odeiv2_system sys = {TOV_equations, NULL, dim, &eos.EoS};
