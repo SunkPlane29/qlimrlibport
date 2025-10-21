@@ -98,13 +98,11 @@ void Interpolation::initialize(gsl_interp_type *interp_type, std::vector<double>
 
 // Function to calculate interpolated y value for a given x using GSL spline
 double Interpolation::yofx(double x) {
-  double result;
-  if (x >= 0.0) {
-    result = gsl_spline_eval(spline, x, acc);
-  } else {
-    result = 0.0;
+  if (x < 0.0) {
+    return 0.0;
   }
-  return result;
+
+  return gsl_spline_eval(spline, x, acc);
 }
 
 // Function to calculate dy/dx of interpolated data using GSL spline
