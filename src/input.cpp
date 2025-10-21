@@ -164,11 +164,12 @@ void EOS::calculate_eos_of_h(std::vector<double> *epsilon,
   EoS.e_vec.push_back(0.0);
   EoS.p_vec.push_back(0.0);
 
+  // Allocate memory for GSL integration workspace
+  gsl_integration_workspace *w =
+  gsl_integration_workspace_alloc(integration_workspace_size);
+
   for (size_t i = 1; i < epsilon->size() - 1; i++) {
 
-    // Allocate memory for GSL integration workspace
-    gsl_integration_workspace *w =
-    gsl_integration_workspace_alloc(integration_workspace_size);
 
     // Perform adaptive quadrature integration using GSL library
     gsl_integration_qag(&F,
@@ -183,15 +184,26 @@ void EOS::calculate_eos_of_h(std::vector<double> *epsilon,
                        &error             // Estimated integration error
     );
 
+    // std::cout << h + delta_h << "    " << delta_h << "\n";
+
+    //NOTE: When delta_h is too small, there will be an interpolation error because two h's will have the same value
+    if (delta_h < 5e-7) {
+      // std::cout << "Zero delta_h encountered at i = " << i << ", epsilon = " << (*epsilon)[i] << "\n";
+      break;
+    }
+
     h = h + delta_h;
     EoS.h_vec.push_back(h);
     EoS.e_vec.push_back((*epsilon)[i + 1]);
     EoS.p_vec.push_back(EoS.p_of_e.yofx((*epsilon)[i + 1]));
-    gsl_integration_workspace_free(w);
   }
 
-  // std::cout << "Calculated h_vec size: " << EoS.h_vec.size() << "\n";
-  
+  gsl_integration_workspace_free(w);
+
+  // for (size_t i = 0; i < EoS.p_vec.size()-1; i++) {
+  //   std::cout << EoS.h_vec[i+1]-EoS.h_vec[i] << "\n";
+  // }
+
   EoS.h_of_e.initialize(type, EoS.e_vec, EoS.h_vec); // Interpolate h(ε)
   EoS.h_of_p.initialize(type, EoS.p_vec, EoS.h_vec); // Interpolate h(p)
   EoS.e_of_h.initialize(type, EoS.h_vec, EoS.e_vec); // Interpolate ε(h)

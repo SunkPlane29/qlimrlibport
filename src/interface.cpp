@@ -167,7 +167,7 @@ extern "C" void qlimr_getMR(double *eos_p, double *eos_eps, int length, double e
 
 extern "C" void qlimr_getMRdiagram(double *eos_p, double *eos_eps, int length, double epsc_start, double epsc_end, int nstars, double R_start, double *out_epsc, double *out_M, double *out_R) {
     EOS eos((gsl_interp_type *)gsl_interp_steffen, eos_p, eos_eps, length);
-    std::cout << "EOS initialized for MR diagram calculation.\n";
+    // std::cout << "EOS initialized for MR diagram calculation.\n";
 
     // Linear spacing the the logarithm work really well for the MR diagram
     double delta_epsc = (log(epsc_end) - log(epsc_start)) / (nstars - 1);
