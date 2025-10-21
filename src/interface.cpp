@@ -44,9 +44,13 @@ void output_quantities(const std::vector<double> &h_sol,
     }
 }
 
-void _qlimr_getMR(EOS &eos, double eps_c, double *out) {
+void _qlimr_getMR(EOS &eos, double eps_c, double R_start, double *out) {
     const int dim = 2;
-    const double R_start = Input_QLIMR::adimensionalize(0.0004, "km"); // km
+
+    R_start = Input_QLIMR::adimensionalize(R_start, "km"); // km
+    if (R_start == 0) {
+        R_start = Input_QLIMR::adimensionalize(0.0004, "km"); // km
+    }
 
     // Defining GSL variables: system, step, control and evolve 
     gsl_odeiv2_system sys = {TOV_equations, NULL, dim, &eos.EoS};
@@ -149,19 +153,19 @@ void _qlimr_getMR(EOS &eos, double eps_c, double *out) {
     // std::cout << "Final mass M = " << out[0] << ", Final radius R = " << out[1] << "\n";
 }
 
-std::tuple<double,double> _qlimr_getMR_func(EOS &eos, double eps_c) {
+std::tuple<double,double> _qlimr_getMR_func(EOS &eos, double eps_c, double R_start) {
     double out[2];
-    _qlimr_getMR(eos, eps_c, out);
+    _qlimr_getMR(eos, eps_c, R_start, out);
     return std::make_tuple(out[0], out[1]);
 }
 
-extern "C" void qlimr_getMR(double *eos_p, double *eos_eps, int length, double eps_c, double *out) {
+extern "C" void qlimr_getMR(double *eos_p, double *eos_eps, int length, double eps_c, double R_start, double *out) {
     EOS eos((gsl_interp_type *)gsl_interp_steffen, eos_p, eos_eps, length);
 
-    _qlimr_getMR(eos, eps_c, out);    
+    _qlimr_getMR(eos, eps_c, R_start, out);    
 }
 
-extern "C" void qlimr_getMRdiagram(double *eos_p, double *eos_eps, int length, double epsc_start, double epsc_end, int nstars, double *out_epsc, double *out_M, double *out_R) {
+extern "C" void qlimr_getMRdiagram(double *eos_p, double *eos_eps, int length, double epsc_start, double epsc_end, int nstars, double R_start, double *out_epsc, double *out_M, double *out_R) {
     EOS eos((gsl_interp_type *)gsl_interp_steffen, eos_p, eos_eps, length);
 
     // Linear spacing the the logarithm work really well for the MR diagram
@@ -176,7 +180,7 @@ extern "C" void qlimr_getMRdiagram(double *eos_p, double *eos_eps, int length, d
     // std::cout << "Running MR diagram calculations for " << nstars << " stars...\n";
 
     for (int i = 0; i < nstars; i++) {
-        futures.push_back(std::async(std::launch::async, _qlimr_getMR_func, std::ref(eos), epsc_values[i]));
+        futures.push_back(std::async(std::launch::async, _qlimr_getMR_func, std::ref(eos), epsc_values[i], R_start));
     }
 
     for (int i = 0; i < nstars; i++) {
