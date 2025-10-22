@@ -100,6 +100,8 @@ void Interpolation::initialize(gsl_interp_type *interp_type, std::vector<double>
 double Interpolation::yofx(double x) {
   if (x < 0.0) {
     return 0.0;
+  } else if (x > spline->x[spline->size - 1]) {
+    return spline->y[spline->size - 1];
   }
 
   return gsl_spline_eval(spline, x, acc);
@@ -107,13 +109,13 @@ double Interpolation::yofx(double x) {
 
 // Function to calculate dy/dx of interpolated data using GSL spline
 double Interpolation::dyofx(double x) {
-  double result;
-  if (x > 0.0) {
-    result = gsl_spline_eval_deriv(spline, x, acc);
-  } else {
-    result = 0.0;
+  if (x < 0.0) {
+    return 0.0;
+  } else if (x > spline->x[spline->size - 1]) {
+    return gsl_spline_eval_deriv(spline, spline->x[spline->size - 1], acc);
   }
-  return result;
+
+  return gsl_spline_eval_deriv(spline, x, acc);
 }
 
 // Method to release memory of spline and accelerator
@@ -200,16 +202,10 @@ void EOS::calculate_eos_of_h(std::vector<double> *epsilon,
 
   gsl_integration_workspace_free(w);
 
-  // for (size_t i = 0; i < EoS.p_vec.size()-1; i++) {
-  //   std::cout << EoS.h_vec[i+1]-EoS.h_vec[i] << "\n";
-  // }
-
   EoS.h_of_e.initialize(type, EoS.e_vec, EoS.h_vec); // Interpolate h(ε)
   EoS.h_of_p.initialize(type, EoS.p_vec, EoS.h_vec); // Interpolate h(p)
   EoS.e_of_h.initialize(type, EoS.h_vec, EoS.e_vec); // Interpolate ε(h)
   EoS.p_of_h.initialize(type, EoS.h_vec, EoS.p_vec); // Interpolate p(h)
-
-  // std::cout << "EoS interpolation completed.\n";
 }
 //-----------------------------------------------------------------------------
 
